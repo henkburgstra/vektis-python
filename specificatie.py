@@ -1,7 +1,3 @@
-#
-#  -*- coding: iso8859-1 -*-
-#  openac/kern/f080_vektis/specificatie.py
-#
 import xlrd
 
 RECORDTYPE = 1
@@ -215,7 +211,7 @@ class VeldWaarde(object):
 
 
 if __name__ == "__main__":
-    zh308_def = VektisDefinitie("ZH308", "9", "c:\\aptana\\workspace\\openac_development\\kern\\f080_vektis\\ZH308v9.0_BERu2.xls")
+    zh308_def = VektisDefinitie("ZH308", "9", "./ZH308v9.0_BERu2.xls")
     zh308_def.laad_specificatie()
     print zh308_def
 
