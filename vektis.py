@@ -123,9 +123,6 @@ class VeldDefinitie(object):
             waarde = ""
         return waarde
 
-class Dummy(object):
-    pass
-
 class VektisData(object):
     def __init__(self, item):
         self.vektis_instantie = None
@@ -209,18 +206,3 @@ class VeldWaarde(object):
         self.definitie = definitie
         self.waarde = definitie.format(waarde)
 
-
-if __name__ == "__main__":
-    zh308_def = VektisDefinitie("ZH308", "9", "./ZH308v9.0_BERu2.xls")
-    zh308_def.laad_specificatie()
-    print zh308_def
-
-    zh308_impl = VektisInstantie(zh308_def, data=VektisData(Dummy()))
-    zh308_impl.nieuw_record("VOORLOOPRECORD")
-    zh308_impl.nieuw_record("VERZEKERDENRECORD")
-    zh308_impl.nieuw_record("PRESTATIERECORD")
-    zh308_impl.nieuw_record("TARIEFRECORD")
-    for _ in range(3):
-        zh308_impl.nieuw_record("ZORGACTIVITEITRECORD", data=VektisData(Dummy()))
-    zh308_impl.nieuw_record("SLUITRECORD")
-    print zh308_impl
