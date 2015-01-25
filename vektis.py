@@ -1,3 +1,4 @@
+import re
 import xlrd
 
 RECORDTYPE = 1
@@ -10,12 +11,15 @@ VERPLICHTING = 9
 EINDPOSITIE = 8
 PATROON = 7
 
+re_eejj_mm_dd = re.compile("(\d{4})-(\d{1,2})-(\d{1,2})")
+re_dd_mm_eejj = re.compile("(\d{1,2})-(\d{1,2})-(\d{4})")
+
 class GeenDataException(Exception):
     def __init__(self, recordtype):
         self.recordtype
 
     def __str__(self):
-        return "Geen VektisData voor recordtype %s" % self.recordtype
+        return "Geen VektisData voor recordtype '%s'" % self.recordtype
 
 class VerplichtVeldException(Exception):
     def __init__(self, recordtype, veldnaam):
@@ -23,7 +27,41 @@ class VerplichtVeldException(Exception):
         self.veldnaam = veldnaam
 
     def __str__(self):
-        return "Veld %s.%s is verplicht" % (self.recordtype, self.veldnaam)
+        return "Veld '%s.%s' is verplicht" % (self.recordtype, self.veldnaam)
+
+class OngeldigTypeException(Exception):
+    def __init__(self, velddefinitie, waarde):
+        self.velddefinitie = velddefinitie
+        self.waarde = waarde
+
+    def __str__(self):
+        return "Veld '%s' heeft type '%s' maar de waarde is '%s'" % (
+            self.velddefinitie.naam, self.velddefinitie.veldtype, self.waarde
+        )
+
+class OngeldigeLengteException(OngeldigTypeException):
+    def __str__(self):
+        return "Waarde '%s' met lengte %d past niet in veld '%s' met lengte %d" % (
+            self.waarde, len(self.waarde), self.velddefinitie.naam, self.velddefinitie.lengte
+        )
+
+class OngeldigFormaatException(OngeldigTypeException):
+    def __str__(self):
+        return "Waarde '%s' van veld '%s' komt niet overeen met patroon '%s'" % (
+            self.waarde, self.velddefinitie.naam, self.velddefinitie.patroon
+        )
+
+
+def datum(waarde):
+    waarde = str(waarde)
+    match = re_eejj_mm_dd.match(waarde)
+    if match:
+        return "%s%s%s" % (match.group(1), match.group(2).rjust(2, "0"), match.group(3).rjust(2, "0"))
+    match = re_dd_mm_eejj.match(waarde)
+    if match:
+        return "%s%s%s" % (match.group(3), match.group(2).rjust(2, "0"), match.group(1).rjust(2, "0"))
+    return waarde
+
 
 class VektisDefinitie(object):
     """
@@ -77,7 +115,7 @@ class VektisDefinitie(object):
                     cell_value(sheet.cell(rijnr, VOLGNUMMER)),
                     cell_value(sheet.cell(rijnr, NAAM)).lower().replace(" ", "_").replace("-", "_"),
                     cell_value(sheet.cell(rijnr, VELDTYPE)),
-                    cell_value(sheet.cell(rijnr, LENGTE)),
+                    int(cell_value(sheet.cell(rijnr, LENGTE))),
                     cell_value(sheet.cell(rijnr, VERPLICHTING)),
                     cell_value(sheet.cell(rijnr, EINDPOSITIE)),
                     cell_value(sheet.cell(rijnr, PATROON))
@@ -117,10 +155,27 @@ class VeldDefinitie(object):
             self.volgnummer, self.naam, self.veldtype, self.lengte, self.verplichting, self.eindpositie, self.patroon
         )
 
-    def format(self, waarde):
-        # TODO: volwaardige implementatie op basis van veldtype, lengte en patroon
+    def formatN(self, waarde):
+        if not waarde:
+            waarde = "0"
+        if not waarde.isdigit():
+            raise OngeldigTypeException(self, waarde)
+        return waarde.rjust(self.lengte, "0")
+
+    def formatAN(self, waarde):
         if waarde is None:
             waarde = ""
+        return waarde.ljust(self.lengte)
+
+    def format(self, waarde):
+        if waarde:
+            waarde = str(waarde)
+        if self.veldtype == "N":
+            if self.patroon == "EEJJMMDD":
+                return self.formatN(datum(waarde))
+            return self.formatN(waarde)
+        if self.veldtype == "AN":
+            return self.formatAN(waarde)
         return waarde
 
 class VektisData(object):
@@ -188,7 +243,7 @@ class RecordInstantie(object):
             else:
                 veldwaarde = data.veld(self.definitie, velddefinitie)
 
-            if velddefinitie.verplichting == "M" and not veldwaarde:
+            if velddefinitie.verplichting == "M" and (veldwaarde is None or veldwaarde == ""):
                 raise VerplichtVeldException(self.definitie.recordtype, velddefinitie.naam)
 
             self.veldwaarden += [VeldWaarde(velddefinitie, veldwaarde)]
@@ -205,4 +260,35 @@ class VeldWaarde(object):
     def __init__(self, definitie, waarde):
         self.definitie = definitie
         self.waarde = definitie.format(waarde)
+        self.valideer()
+
+    def valideer(self):
+        if len(self.waarde) > self.definitie.lengte:
+            raise OngeldigeLengteException(self.definitie, self.waarde)
+        patroon = self.definitie.patroon
+        if not patroon:
+            return
+        valide = True
+        if patroon == "EEJJMMDD":
+            eeuw = self.waarde[:2]
+            maand = self.waarde[4:6]
+            dag = self.waarde[6:8]
+            valide = ((eeuw >= "18" and eeuw <= "20")
+                and (maand >= "01" and maand <= "12")
+                and (dag >= "01" and dag <= "31"))
+        else:
+            for i in range(len(patroon)):
+                p = patroon[i]
+                w = self.waarde[i]
+                if p == "N" and not w.isdigit():
+                    valide = False
+                    break
+                elif p == "A" and not w.isalpha():
+                    valide = False
+                    break
+
+        if not valide:
+            raise OngeldigFormaatException(self.definitie, self.waarde)
+
+
 
