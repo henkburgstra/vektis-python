@@ -9,12 +9,9 @@ parser.add_option("-s", "--standaard", dest="standaard",
     help="Vektis standaard (bijvoorbeeld ZH308)")
 parser.add_option("-v", "--versie", dest="versie",
     help="Versiestring voor de Vektis standaard")
-parser.add_option("-d", "--definitie", dest="definitie",
-    help="Excel-bestand met de Vektis-specificatie")
 
 parser.set_defaults(standaard="ZH308")
 parser.set_defaults(versie="9.0")
-parser.set_defaults(specificatie="./ZH308v9.0_BERu2.xls")
 
 (options, args) = parser.parse_args()
 
