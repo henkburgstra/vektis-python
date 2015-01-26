@@ -1,3 +1,4 @@
+import os
 import re
 import xlrd
 
@@ -13,6 +14,17 @@ PATROON = 7
 
 re_eejj_mm_dd = re.compile("(\d{4})-(\d{1,2})-(\d{1,2})")
 re_dd_mm_eejj = re.compile("(\d{1,2})-(\d{1,2})-(\d{4})")
+
+class GeenSpecificatieException(Exception):
+    def __init__(self, standaard, versie, config):
+        self.standaard = standaard
+        self.versie = versie
+        self.config = config
+
+    def __str__(self):
+        return "Geen specificatiebestand voor Vektisstandaard '%s' versie '%s' in map '%s' met patroon '%s'" % (
+            self.standaard, self.versie, self.config.map, self.config.regexp
+        )
 
 class GeenDataException(Exception):
     def __init__(self, recordtype):
@@ -52,7 +64,29 @@ class OngeldigFormaatException(OngeldigTypeException):
         )
 
 
+class Config(object):
+    def __init__(self, map=None, regexp=None, sheet=None, startrow=None):
+        if map is None:
+            map = "."
+        if regexp is None:
+            regexp = "<STANDAARD>v<VERSIE>.+"
+        if sheet is None:
+            sheet = 1
+        if startrow is None:
+            startrow = 11
+        self.map = map
+        self.regexp = regexp
+        self.sheet = sheet
+        self.startrow = startrow
+
+
 def datum(waarde):
+    """
+    datum() converteert een datum in formaat dd-mm-eejj of eejj-mm-dd naar
+    het Vektis-formaat eejjmmdd. Laat waarde ongemoeid als er niets te converteren valt.
+    :param waarde: string
+    :return: string
+    """
     waarde = str(waarde)
     match = re_eejj_mm_dd.match(waarde)
     if match:
@@ -68,10 +102,12 @@ class VektisDefinitie(object):
     Definitie van een Vektis-standaard.
     Een definitie bestaat uit de standaardnaam, versie en een verzameling recorddefinities.
     """
-    def __init__(self, standaard, versie, specificatiebestand):
+    def __init__(self, standaard, versie, config=None):
+        if config is None:
+            config = Config()
         self.standaard = standaard
         self.versie = versie
-        self.specificatiebestand = specificatiebestand
+        self.config = config
         self.recorddefinities = {}
 
     def __str__(self):
@@ -80,6 +116,13 @@ class VektisDefinitie(object):
     def get_recorddefinitie(self, naam):
         #  TODO: raise exception als de recorddefinitie niet bestaat
         return self.recorddefinities.get(naam)
+
+    def get_bestandsnaam(self):
+        for bestandsnaam in os.listdir(self.config.map):
+            if re.match(
+                    self.config.regexp.replace("<STANDAARD>", self.standaard)
+                            .replace("<VERSIE>", self.versie), bestandsnaam):
+                return bestandsnaam
 
     def laad_specificatie(self):
         def cell_value(cell):
@@ -100,10 +143,13 @@ class VektisDefinitie(object):
                 value = str(cell.value)
             return value
 
-        workbook = xlrd.open_workbook(self.specificatiebestand)
-        sheet = workbook.sheet_by_index(1)
+        bestandsnaam = self.get_bestandsnaam()
+        if bestandsnaam is None:
+            raise GeenSpecificatieException(self.standaard, self.versie, self.config)
+        workbook = xlrd.open_workbook(bestandsnaam)
+        sheet = workbook.sheet_by_index(self.config.sheet)
 
-        for rijnr in range(11, sheet.nrows):
+        for rijnr in range(self.config.startrow, sheet.nrows):
             recordtype = cell_value(sheet.cell(rijnr, RECORDTYPE))
             recordcode = cell_value(sheet.cell(rijnr, RECORDCODE))
             recorddefinitie = self.recorddefinities.get(recordtype)

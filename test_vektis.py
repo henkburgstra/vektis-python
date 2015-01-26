@@ -28,7 +28,7 @@ class TestVektis(unittest.TestCase):
 
 class TestVektisZH308Monolitisch(TestVektis):
     def setUp(self):
-        zh308_def = vektis.VektisDefinitie(options.standaard, options.versie, options.specificatie)
+        zh308_def = vektis.VektisDefinitie(options.standaard, options.versie)
         zh308_def.laad_specificatie()
 
         testrecord = zh308.new_testrecord()
@@ -45,13 +45,13 @@ class TestVektisZH308Monolitisch(TestVektis):
 
 class TestVektisZH308PerRecordtype(TestVektis):
     def setUp(self):
-        zh308_def = vektis.VektisDefinitie(options.standaard, options.versie, options.specificatie)
+        zh308_def = vektis.VektisDefinitie(options.standaard, options.versie)
         zh308_def.laad_specificatie()
 
 
         testrecord = zh308.new_testrecord()
         zh308_impl = vektis.VektisInstantie(zh308_def)
-        zh308_impl.nieuw_record("VOORLOOPRECORD", data=zh308.Voorlooprecord(testrecord))
+        zh308_impl.nieuw_record("VOORLOOPRECORD", data=zh308.Voorlooprecord_9_0(testrecord))
         zh308_impl.nieuw_record("VERZEKERDENRECORD")
         zh308_impl.nieuw_record("PRESTATIERECORD")
         zh308_impl.nieuw_record("TARIEFRECORD")
