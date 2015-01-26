@@ -67,7 +67,7 @@ class OngeldigFormaatException(OngeldigTypeException):
 class Config(object):
     def __init__(self, map=None, regexp=None, sheet=None, startrow=None):
         if map is None:
-            map = "."
+            map = os.path.dirname(os.path.abspath(__file__))
         if regexp is None:
             regexp = "<STANDAARD>v<VERSIE>.+"
         if sheet is None:
