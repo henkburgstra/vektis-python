@@ -26,10 +26,10 @@ vektis_def = vektis.VektisDefinitie("ZH308", "9.0",
 ```
 
 De Config klasse heeft de volgende keyword parameters:
-* map - map waar het Vektis-definitiebestand voor deze standaard staat;
-* regexp - reguliere expressie waaraan de naam van het definitiebestand aan moet voldoen 
+* **map** - map waar het Vektis-definitiebestand voor deze standaard staat;
+* **regexp** - reguliere expressie waaraan de naam van het definitiebestand aan moet voldoen 
     (standaard "<STANDAARD>v<VERSIE>.+", waarbij <STANDAARD> en <VERSIE> worden vervangen
     door de werkelijke standaard en versie);
-* sheet - het nummer van de sheet, beginnend bij 0 (standaard 1);
-* startrow - het rijnummer waar moet worden begonnen met inlezen, beginnend bij 0 (standaard 11).
+* **sheet** - het nummer van de sheet, beginnend bij 0 (standaard 1);
+* **startrow** - het rijnummer waar moet worden begonnen met inlezen, beginnend bij 0 (standaard 11).
 
