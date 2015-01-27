@@ -22,7 +22,7 @@ van *VektisDefinitie*.
 
 ```python
 vektis_def = vektis.VektisDefinitie("ZH308", "9.0", 
-    vektis.Config(map="c:\\vektis\definities"))
+    vektis.Config(map="c:\\vektis\\definities"))
 ```
 
 De Config klasse heeft de volgende keyword parameters:
