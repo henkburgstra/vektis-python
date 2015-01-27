@@ -21,7 +21,8 @@ Je kunt hiervan afwijken door een configuratie-object mee te geven aan de constr
 van *VektisDefinitie*.
 
 ```python
-vektis_def = vektis.VektisDefinitie("ZH308", "9.0", vektis.Config(map="c:\\vektis\definities"))
+vektis_def = vektis.VektisDefinitie("ZH308", "9.0", 
+    vektis.Config(map="c:\\vektis\definities"))
 ```
 
 De Config klasse heeft de volgende keyword parameters:
