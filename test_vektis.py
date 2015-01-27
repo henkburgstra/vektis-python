@@ -29,15 +29,15 @@ class TestVektisZH308Monolitisch(TestVektis):
         zh308_def.laad_specificatie()
 
         testrecord = zh308.new_testrecord()
-        zh308_impl = vektis.VektisInstantie(zh308_def, data=zh308.Monolitisch(testrecord))
-        zh308_impl.nieuw_record("VOORLOOPRECORD")
-        zh308_impl.nieuw_record("VERZEKERDENRECORD")
-        zh308_impl.nieuw_record("PRESTATIERECORD")
-        zh308_impl.nieuw_record("TARIEFRECORD")
+        zh308_inst = vektis.VektisInstantie(zh308_def, data=zh308.Monolitisch(testrecord))
+        zh308_inst.nieuw_record("VOORLOOPRECORD")
+        zh308_inst.nieuw_record("VERZEKERDENRECORD")
+        zh308_inst.nieuw_record("PRESTATIERECORD")
+        zh308_inst.nieuw_record("TARIEFRECORD")
         for _ in range(3):
-            zh308_impl.nieuw_record("ZORGACTIVITEITRECORD", data=vektis.VektisData(Dummy()))
-        zh308_impl.nieuw_record("SLUITRECORD")
-        print zh308_impl
+            zh308_inst.nieuw_record("ZORGACTIVITEITRECORD", data=vektis.VektisData(Dummy()))
+        zh308_inst.nieuw_record("SLUITRECORD")
+        print zh308_inst
 
 
 class TestVektisZH308PerRecordtype(TestVektis):
@@ -47,12 +47,12 @@ class TestVektisZH308PerRecordtype(TestVektis):
 
 
         testrecord = zh308.new_testrecord()
-        zh308_impl = vektis.VektisInstantie(zh308_def)
-        zh308_impl.nieuw_record("VOORLOOPRECORD", data=zh308.Voorlooprecord_9_0(testrecord))
-        zh308_impl.nieuw_record("VERZEKERDENRECORD")
-        zh308_impl.nieuw_record("PRESTATIERECORD")
-        zh308_impl.nieuw_record("TARIEFRECORD")
+        zh308_inst = vektis.VektisInstantie(zh308_def)
+        zh308_inst.nieuw_record("VOORLOOPRECORD", data=zh308.Voorlooprecord_9_0(testrecord))
+        zh308_inst.nieuw_record("VERZEKERDENRECORD")
+        zh308_inst.nieuw_record("PRESTATIERECORD")
+        zh308_inst.nieuw_record("TARIEFRECORD")
         for _ in range(3):
-            zh308_impl.nieuw_record("ZORGACTIVITEITRECORD", data=vektis.VektisData(Dummy()))
-        zh308_impl.nieuw_record("SLUITRECORD")
+            zh308_inst.nieuw_record("ZORGACTIVITEITRECORD", data=vektis.VektisData(Dummy()))
+        zh308_inst.nieuw_record("SLUITRECORD")
 
