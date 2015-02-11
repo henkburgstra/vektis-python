@@ -55,4 +55,5 @@ class TestVektisZH308PerRecordtype(TestVektis):
         for _ in range(3):
             zh308_inst.nieuw_record("ZORGACTIVITEITRECORD", data=vektis.VektisData(Dummy()))
         zh308_inst.nieuw_record("SLUITRECORD")
+        print zh308_inst
 
