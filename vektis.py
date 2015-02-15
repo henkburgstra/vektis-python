@@ -1,3 +1,4 @@
+from collections import OrderedDict
 import os
 import re
 import xlrd
@@ -34,12 +35,18 @@ class GeenDataException(Exception):
         return "Geen VektisData voor recordtype '%s'" % self.recordtype
 
 class VerplichtVeldException(Exception):
-    def __init__(self, recordtype, veldnaam):
+    def __init__(self, recordtype, velddefinitie):
         self.recordtype = recordtype
-        self.veldnaam = veldnaam
+        self.velddefinitie = velddefinitie
 
     def __str__(self):
-        return "Veld '%s.%s' is verplicht" % (self.recordtype, self.veldnaam)
+        return "Veld '%s.%s' is verplicht - %s(%s) %s" % (
+            self.recordtype,
+            self.velddefinitie.naam,
+            self.velddefinitie.veldtype,
+            self.velddefinitie.lengte,
+            self.velddefinitie.patroon
+        )
 
 class OngeldigTypeException(Exception):
     def __init__(self, velddefinitie, waarde):
@@ -108,7 +115,7 @@ class VektisDefinitie(object):
         self.standaard = standaard
         self.versie = versie
         self.config = config
-        self.recorddefinities = {}
+        self.recorddefinities = OrderedDict()
 
     def __str__(self):
         return "\r\n".join(["%s" % recorddefinitie for recorddefinitie in self.recorddefinities.values()])
@@ -159,7 +166,10 @@ class VektisDefinitie(object):
             recorddefinitie.velddefinities += [
                 VeldDefinitie(
                     cell_value(sheet.cell(rijnr, VOLGNUMMER)),
-                    cell_value(sheet.cell(rijnr, NAAM)).lower().replace(" ", "_").replace("-", "_"),
+                    cell_value(sheet.cell(rijnr, NAAM)).lower()
+                        .replace(" ", "_").replace("-", "_")
+                        .replace("(", "").replace(")", "")
+                        .replace("/", "_"),
                     cell_value(sheet.cell(rijnr, VELDTYPE)),
                     int(cell_value(sheet.cell(rijnr, LENGTE))),
                     cell_value(sheet.cell(rijnr, VERPLICHTING)),
@@ -167,6 +177,25 @@ class VektisDefinitie(object):
                     cell_value(sheet.cell(rijnr, PATROON))
                 )
             ]
+
+    def genereer_classes(self):
+        def waarde(velddefinitie):
+            if velddefinitie.veldtype == "N":
+                if velddefinitie.patroon == "EEJJMMDD":
+                    return "'2015-01-01'"
+                return 0
+            return "''"
+
+        code = ["import vektis", "", ""]
+        for naam, definitie in self.recorddefinities.items():
+            code += ["class %s_%s(vektis.VektisData):" % (naam.capitalize(), self.versie.replace(".", "_"))]
+            for velddefinitie in definitie.velddefinities:
+                code += ["\tdef %s(self):" % velddefinitie.naam]
+                code += ["\t\treturn %s" % waarde(velddefinitie)]
+                code += [""]
+            code += [""]
+        return "\n".join(code)
+
 
 
 class RecordDefinitie(object):
@@ -255,6 +284,16 @@ class VektisInstantie(object):
     def __str__(self):
         return "\r\n".join("%s" % record for record in self.records)
 
+    def get_record(self, recordtype):
+        for record in self.records:
+            if record.definitie.recordtype == recordtype:
+                return record
+
+    def get_veld(self, recordtype, veldnaam):
+        record = self.get_record(recordtype)
+        if record:
+            return record.get_veld(veldnaam)
+
     def nieuw_record(self, recordtype, data=None):
         recorddefinitie = self.definitie.get_recorddefinitie(recordtype)
         if data is None:
@@ -282,7 +321,7 @@ class RecordInstantie(object):
 
         for velddefinitie in self.definitie.velddefinities:
 
-            if velddefinitie.naam == "kenmerk_record":
+            if velddefinitie.naam == "kenmerk_record" or velddefinitie.naam == "identificatie_detailrecord":
                 veldwaarde = self.definitie.recordcode
             elif hasattr(data, velddefinitie.naam) and callable(getattr(data, velddefinitie.naam)):
                 veldwaarde = getattr(data, velddefinitie.naam)()
@@ -290,9 +329,14 @@ class RecordInstantie(object):
                 veldwaarde = data.veld(self.definitie, velddefinitie)
 
             if velddefinitie.verplichting == "M" and (veldwaarde is None or veldwaarde == ""):
-                raise VerplichtVeldException(self.definitie.recordtype, velddefinitie.naam)
+                raise VerplichtVeldException(self.definitie.recordtype, velddefinitie)
 
             self.veldwaarden += [VeldWaarde(velddefinitie, veldwaarde)]
+
+    def get_veld(self, veldnaam):
+        for veld in self.veldwaarden:
+            if veld.definitie.naam == veldnaam:
+                return veld
 
 
     def __str__(self):

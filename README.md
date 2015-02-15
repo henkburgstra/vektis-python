@@ -66,5 +66,18 @@ Parameter 'data' is optioneel. Als 'data' niet wordt opgegeven, dan probeert nie
 te gebruiken dat is meegegeven aan de constructor van VektisInstantie. Als dat er ook niet is,
 dan volgt een GeenDataException.
 
+De volgende excepties kunnen optreden:
+VerplichtVeldException - Veld is verplicht maar het record heeft geen waarde voor dit veld. De exceptie
+toont de definitie van het veld (velddtype, lengte, patroon).
+
+OngeldigTpeExceptie - De veldwaarde komt niet overeen met het gedefinieerde type. De exceptie
+toon het type en de waarde.
+
+OngeldigFormaatException - De veldwaarde komt niet overeen met het gedefinieerde patroon. De exceptie
+toont de waarde en het patroon.
+
+Merk op: De Vektis klasse accepteert datums in de formaten eejjmmdd, eejj-mm-dd en dd-mm-eejj.
+
+
 Nadat alle records zijn toegevoegd is str(vektis_inst) het vektisbestand dat kan worden ingediend.
 

@@ -49,11 +49,18 @@ class TestVektisZH308PerRecordtype(TestVektis):
         testrecord = zh308.new_testrecord()
         zh308_inst = vektis.VektisInstantie(zh308_def)
         zh308_inst.nieuw_record("VOORLOOPRECORD", data=zh308.Voorlooprecord_9_0(testrecord))
-        zh308_inst.nieuw_record("VERZEKERDENRECORD")
-        zh308_inst.nieuw_record("PRESTATIERECORD")
-        zh308_inst.nieuw_record("TARIEFRECORD")
+        zh308_inst.nieuw_record("VERZEKERDENRECORD", data=zh308.Verzekerdenrecord_9_0(testrecord))
+        zh308_inst.nieuw_record("PRESTATIERECORD", data=zh308.Prestatierecord_9_0(testrecord))
+        zh308_inst.nieuw_record("TARIEFRECORD", data=zh308.Tariefrecord_9_0(testrecord))
         for _ in range(3):
             zh308_inst.nieuw_record("ZORGACTIVITEITRECORD", data=vektis.VektisData(Dummy()))
         zh308_inst.nieuw_record("SLUITRECORD")
         print zh308_inst
+
+
+class TestVektisGenereerClasses(TestVektis):
+    def setUp(self):
+        zh308_def = vektis.VektisDefinitie(options.standaard, options.versie)
+        zh308_def.laad_specificatie()
+        print zh308_def.genereer_classes()
 
