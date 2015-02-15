@@ -17,8 +17,13 @@ re_eejj_mm_dd = re.compile("(\d{4})-(\d{1,2})-(\d{1,2})")
 re_dd_mm_eejj = re.compile("(\d{1,2})-(\d{1,2})-(\d{4})")
 
 standaarden = {
-    "101": "ZH308", "102": "ZH309", "189": "ZH310", "190": "ZH311"
+    "101": "ZH308", "102": "ZH309", "179": "EP301", "180": "EP302", "189": "ZH310", "190": "ZH311",
+    "416": "WMO303", "417": "WMO304"
 }
+
+def registreer_standaard(code, naam):
+    global standaarden
+    standaarden[code]
 
 class GeenSpecificatieException(Exception):
     def __init__(self, standaard, versie, config):
