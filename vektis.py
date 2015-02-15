@@ -16,6 +16,10 @@ PATROON = 7
 re_eejj_mm_dd = re.compile("(\d{4})-(\d{1,2})-(\d{1,2})")
 re_dd_mm_eejj = re.compile("(\d{1,2})-(\d{1,2})-(\d{4})")
 
+standaarden = {
+    "101": "ZH308", "102": "ZH309", "189": "ZH310", "190": "ZH311"
+}
+
 class GeenSpecificatieException(Exception):
     def __init__(self, standaard, versie, config):
         self.standaard = standaard
@@ -196,6 +200,37 @@ class VektisDefinitie(object):
             code += [""]
         return "\n".join(code)
 
+    @staticmethod
+    def lees_bestand(bestandsnaam, callback=None):
+        def lees_standaard(header):
+            code_ei = header[2:5]
+            versie = int(header[5:7])
+            subversie = int(header[7:9])
+            return (standaarden.get(code_ei, ""), "%d.%d" % (versie, subversie))
+
+        def lees_berichttype(definitie, regel):
+            recordcode = regel[:2]
+            for recorddefinitie in definitie.recorddefinities.values():
+                if recorddefinitie.recordcode == recordcode:
+                    return recorddefinitie.recordtype
+            return ""
+
+        bestand = open(bestandsnaam)
+        header = bestand.readline()
+        bestand.seek(0)
+        standaard, versie = lees_standaard(header)
+        definitie = VektisDefinitie(standaard, versie)
+        definitie.laad_specificatie()
+        instantie = VektisInstantie(definitie)
+
+        regel = bestand.readline()
+        while regel:
+            record = instantie.nieuw_record(lees_berichttype(definitie, regel), data=VektisReader(regel))
+            if callable(callback):
+                callback(record)
+            regel = bestand.readline()
+
+        return instantie
 
 
 class RecordDefinitie(object):
@@ -264,6 +299,10 @@ class VektisData(object):
     def veld(self, berichtdefinitie, velddefinitie):
         pass
 
+class VektisReader(VektisData):
+    def veld(self, berichtdefinitie, velddefinitie):
+        return self.item[int(velddefinitie.eindpositie) - int(velddefinitie.lengte):int(velddefinitie.eindpositie)]
+
 class VektisInstantie(object):
     """
     Instantie van een Vektis-standaard.
@@ -302,7 +341,9 @@ class VektisInstantie(object):
             data.set_vektis_instantie(self)
         if data is None:
             raise GeenDataException(recordtype)
-        self.records += [RecordInstantie(recorddefinitie, data)]
+        record = RecordInstantie(recorddefinitie, data)
+        self.records += [record]
+        return record
 
     def aantal_detailrecords(self):
         return sum([1 for record in self.records
@@ -356,7 +397,7 @@ class VeldWaarde(object):
         if len(self.waarde) > self.definitie.lengte:
             raise OngeldigeLengteException(self.definitie, self.waarde)
         patroon = self.definitie.patroon
-        if not patroon:
+        if self.definitie.verplichting != "M" or not patroon:
             return
         valide = True
         if patroon == "EEJJMMDD":

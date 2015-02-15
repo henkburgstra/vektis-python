@@ -64,3 +64,9 @@ class TestVektisGenereerClasses(TestVektis):
         zh308_def.laad_specificatie()
         print zh308_def.genereer_classes()
 
+
+class TestReader(TestVektis):
+    def setUp(self):
+        instantie = vektis.VektisDefinitie.lees_bestand("/Users/henkburgstra/Downloads/edd_bestanden_bij_ticket_7928/14129019-0101-UNIVZ-vektis9.edd")
+        print instantie
+
