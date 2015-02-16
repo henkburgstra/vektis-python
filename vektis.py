@@ -23,7 +23,7 @@ standaarden = {
 
 def registreer_standaard(code, naam):
     global standaarden
-    standaarden[code]
+    standaarden[code] = naam
 
 class GeenSpecificatieException(Exception):
     def __init__(self, standaard, versie, config):
@@ -323,15 +323,15 @@ class VektisInstantie(object):
         if data is not None:
             data.set_vektis_instantie(self)
         self.data = data
+        self.record_counter = 0
         self.records = []
+        self.groep = {}
 
     def __str__(self):
         return "\r\n".join("%s" % record for record in self.records)
 
     def get_record(self, recordtype):
-        for record in self.records:
-            if record.definitie.recordtype == recordtype:
-                return record
+        return self.groep.get(recordtype)
 
     def get_veld(self, recordtype, veldnaam):
         record = self.get_record(recordtype)
@@ -347,12 +347,23 @@ class VektisInstantie(object):
         if data is None:
             raise GeenDataException(recordtype)
         record = RecordInstantie(recorddefinitie, data)
+        identificatie = record.get_veld("identificatie_detailrecord")
+        if identificatie and identificatie.waarde == 1000000:
+            self.record_counter += 1
+            identificatie.waarde = self.record_counter
         self.records += [record]
+        self.groep[recordtype] = record
         return record
 
-    def aantal_detailrecords(self):
+    def aantal_detailrecords(self, recordtype=None):
+        if recordtype is None:
+            return max(len(self.records) - 1, 0)
         return sum([1 for record in self.records
-                    if record.definitie.recordtype not in ("VOORLOOPRECORD", "SLUITRECORD")])
+                    if record.definitie.recordtype == recordtype])
+
+    def totaliseer(self, recordtype, veldnaam):
+        return sum([record.get_veld(veldnaam).waarde for record in self.records
+            if record.definitie.recordtype == recordtype])
 
 
 class RecordInstantie(object):
@@ -363,12 +374,14 @@ class RecordInstantie(object):
     def __init__(self, definitie, data):
         self.definitie = definitie
         self.data = data
-        self.veldwaarden = []
+        self.veldwaarden = OrderedDict()
 
         for velddefinitie in self.definitie.velddefinities:
 
-            if velddefinitie.naam == "kenmerk_record" or velddefinitie.naam == "identificatie_detailrecord":
+            if velddefinitie.naam == "kenmerk_record":
                 veldwaarde = self.definitie.recordcode
+            elif velddefinitie.naam == "identificatie_detailrecord":
+                veldwaarde = 1000000  #  Krijgt later een waarde
             elif hasattr(data, velddefinitie.naam) and callable(getattr(data, velddefinitie.naam)):
                 veldwaarde = getattr(data, velddefinitie.naam)()
             else:
@@ -377,16 +390,14 @@ class RecordInstantie(object):
             if velddefinitie.verplichting == "M" and (veldwaarde is None or veldwaarde == ""):
                 raise VerplichtVeldException(self.definitie.recordtype, velddefinitie)
 
-            self.veldwaarden += [VeldWaarde(velddefinitie, veldwaarde)]
+            self.veldwaarden[velddefinitie.naam] = VeldWaarde(velddefinitie, veldwaarde)
 
     def get_veld(self, veldnaam):
-        for veld in self.veldwaarden:
-            if veld.definitie.naam == veldnaam:
-                return veld
+        return self.veldwaarden.get(veldnaam)
 
 
     def __str__(self):
-        return "".join([veld.waarde for veld in self.veldwaarden])
+        return "".join([veld.waarde for veld in self.veldwaarden.values()])
 
 
 class VeldWaarde(object):
