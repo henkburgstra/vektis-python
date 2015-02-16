@@ -363,7 +363,7 @@ class VektisInstantie(object):
 
     def totaliseer(self, recordtype, veldnaam):
         return sum([record.get_veld(veldnaam).waarde for record in self.records
-            if record.definitie.recordtype == recordtype])
+            if record.definitie.recordtype == recordtype and record.get_veld(veldnaam)])
 
 
 class RecordInstantie(object):
