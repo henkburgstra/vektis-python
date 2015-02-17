@@ -12,6 +12,7 @@ LENGTE = 6
 VERPLICHTING = 9
 EINDPOSITIE = 8
 PATROON = 7
+BESCHRIJVING = 15
 
 re_eejj_mm_dd = re.compile("(\d{4})-(\d{1,2})-(\d{1,2})")
 re_dd_mm_eejj = re.compile("(\d{1,2})-(\d{1,2})-(\d{4})")
@@ -96,6 +97,27 @@ class Config(object):
         self.startrow = startrow
 
 
+def splits(tekst, max_lengte):
+    regels = []
+    woorden = tekst.split()
+    zin_lengte = 0
+    splits = [0]
+    i = 0
+
+    for woord in woorden:
+        zin_lengte += len(woord) + 1
+        if (zin_lengte - 1) > max_lengte:
+            splits += [i]
+            zin_lengte = 0
+        i += 1
+
+    splits += [len(woorden)]
+    for i in range(len(splits) - 1):
+        regels += [" ".join(woorden[splits[i]:splits[i + 1]])]
+
+    return regels
+
+
 def datum(waarde):
     """
     datum() converteert een datum in formaat dd-mm-eejj of eejj-mm-dd naar
@@ -146,7 +168,7 @@ class VektisDefinitie(object):
             if cell.ctype == xlrd.XL_CELL_EMPTY:
                 value = ''
             elif cell.ctype == xlrd.XL_CELL_TEXT:
-                value = str(cell.value)
+                value = cell.value.encode("utf-8")
             elif cell.ctype == xlrd.XL_CELL_DATE:
                 value = "%s-%s-%s" % xlrd.xldate_as_tuple(cell.value, 0)[:3]
             elif cell.ctype == xlrd.XL_CELL_NUMBER:
@@ -183,7 +205,8 @@ class VektisDefinitie(object):
                     int(cell_value(sheet.cell(rijnr, LENGTE))),
                     cell_value(sheet.cell(rijnr, VERPLICHTING)),
                     cell_value(sheet.cell(rijnr, EINDPOSITIE)),
-                    cell_value(sheet.cell(rijnr, PATROON))
+                    cell_value(sheet.cell(rijnr, PATROON)),
+                    cell_value(sheet.cell(rijnr, BESCHRIJVING))
                 )
             ]
 
@@ -200,6 +223,12 @@ class VektisDefinitie(object):
             code += ["class %s_%s(vektis.VektisData):" % (naam.capitalize(), self.versie.replace(".", "_"))]
             for velddefinitie in definitie.velddefinities:
                 code += ["\tdef %s(self):" % velddefinitie.naam]
+                code += ["\t\t\"\"\""]
+                for regel in splits(velddefinitie.beschrijving, 95):
+                    code += ["\t\t%s" % regel]
+                code += ["\t\t"]
+                code += ["\t\t%s(%s) %s" % (velddefinitie.veldtype, velddefinitie.lengte, velddefinitie.verplichting)]
+                code += ["\t\t\"\"\""]
                 code += ["\t\treturn %s" % waarde(velddefinitie)]
                 code += [""]
             code += [""]
@@ -256,7 +285,7 @@ class VeldDefinitie(object):
     """
     Vektis velddefinitie
     """
-    def __init__(self, volgnummer, naam, veldtype, lengte, verplichting, eindpositie, patroon):
+    def __init__(self, volgnummer, naam, veldtype, lengte, verplichting, eindpositie, patroon, beschrijving):
         self.volgnummer = volgnummer
         self.naam = naam
         self.veldtype = veldtype
@@ -264,6 +293,7 @@ class VeldDefinitie(object):
         self.verplichting = verplichting
         self.eindpositie = eindpositie
         self.patroon = patroon
+        self.beschrijving = beschrijving
 
     def __str__(self):
         return "%s,%s,%s,%s,%s,%s,%s" % (
