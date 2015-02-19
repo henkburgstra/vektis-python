@@ -22,6 +22,10 @@ standaarden = {
     "416": "WMO303", "417": "WMO304"
 }
 
+MONOLITISCH = "monolitisch"
+PER_RECORD = "per_record"
+
+
 def registreer_standaard(code, naam):
     global standaarden
     standaarden[code] = naam
@@ -197,10 +201,7 @@ class VektisDefinitie(object):
             recorddefinitie.velddefinities += [
                 VeldDefinitie(
                     cell_value(sheet.cell(rijnr, VOLGNUMMER)),
-                    cell_value(sheet.cell(rijnr, NAAM)).lower()
-                        .replace(" ", "_").replace("-", "_")
-                        .replace("(", "").replace(")", "")
-                        .replace("/", "_"),
+                    re.sub("\W", "_", cell_value(sheet.cell(rijnr, NAAM)).lower()),
                     cell_value(sheet.cell(rijnr, VELDTYPE)),
                     int(cell_value(sheet.cell(rijnr, LENGTE))),
                     cell_value(sheet.cell(rijnr, VERPLICHTING)),
@@ -210,7 +211,7 @@ class VektisDefinitie(object):
                 )
             ]
 
-    def genereer_classes(self):
+    def genereer_classes_per_record(self):
         def waarde(velddefinitie):
             if velddefinitie.veldtype == "N":
                 if velddefinitie.patroon == "EEJJMMDD":
@@ -218,7 +219,7 @@ class VektisDefinitie(object):
                 return 0
             return "''"
 
-        code = ["import vektis", "", ""]
+        code = []
         for naam, definitie in self.recorddefinities.items():
             code += ["class %s_%s(vektis.VektisData):" % (naam.capitalize(), self.versie.replace(".", "_"))]
             for velddefinitie in definitie.velddefinities:
@@ -232,6 +233,44 @@ class VektisDefinitie(object):
                 code += ["\t\treturn %s" % waarde(velddefinitie)]
                 code += [""]
             code += [""]
+
+        return code
+
+    def genereer_classes_monolitisch(self):
+        unieke_velden = OrderedDict()
+        code = ["mapping = dict("]
+
+        for definitie in self.recorddefinities.values():
+            for velddefinitie in definitie.velddefinities:
+                unieke_velden[velddefinitie.naam] = velddefinitie
+
+        i = 1
+        for veldnaam, velddefinitie in unieke_velden.items():
+            code += ["\t%s=''%s\t\t#  %s(%s) %s" % (
+                veldnaam, (i == len(unieke_velden) and "" or ","),
+                velddefinitie.veldtype, velddefinitie.lengte, velddefinitie.verplichting)]
+            i += 1
+        code += [")", "", ""]
+
+        code += ["class Monolitisch(vektis.VektisData):"]
+        code += ["\tdef veld(self, berichtdefinitie, velddefinitie):"]
+        code += ["\t\treturn getattr(self.item, mapping.get(velddefinitie.naam, ''), None)"]
+
+        return code
+
+    def genereer_classes(self, pad, strategie=PER_RECORD):
+        code = ["import vektis", "", ""]
+
+        if strategie == PER_RECORD:
+            code += self.genereer_classes_per_record()
+        else:
+            code += self.genereer_classes_monolitisch()
+
+        bestandsnaam = os.path.join(pad, "%sv%s_%s.py" % (
+            self.standaard, self.versie.replace(".", "_"), strategie))
+        f = open(bestandsnaam, "w")
+        f.write("\n".join(code).replace("\t", 4 * " "))
+        f.close()
         return "\n".join(code)
 
     @staticmethod

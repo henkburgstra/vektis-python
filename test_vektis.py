@@ -62,7 +62,8 @@ class TestVektisGenereerClasses(TestVektis):
     def setUp(self):
         zh308_def = vektis.VektisDefinitie(options.standaard, options.versie)
         zh308_def.laad_specificatie()
-        print zh308_def.genereer_classes()
+        print zh308_def.genereer_classes("./")
+        print zh308_def.genereer_classes("./", strategie=vektis.MONOLITISCH)
 
 
 class TestReader(TestVektis):
