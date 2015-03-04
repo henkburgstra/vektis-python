@@ -434,6 +434,11 @@ class VektisInstantie(object):
         return sum([record.get_veld(veldnaam).waarde for record in self.records
             if record.definitie.recordtype == recordtype and record.get_veld(veldnaam)])
 
+    def schrijf(self, bestandsnaam):
+        f = open(bestandsnaam, "wb")
+        f.write(str(self))
+        f.close()
+
 
 class RecordInstantie(object):
     """
