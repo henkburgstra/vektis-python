@@ -3,17 +3,6 @@ import os
 import re
 import xlrd
 
-RECORDTYPE = 1
-RECORDCODE = 2
-VOLGNUMMER = 3
-NAAM = 4
-VELDTYPE = 5
-LENGTE = 6
-VERPLICHTING = 9
-EINDPOSITIE = 8
-PATROON = 7
-BESCHRIJVING = 15
-
 re_eejj_mm_dd = re.compile("(\d{4})-(\d{1,2})-(\d{1,2})")
 re_dd_mm_eejj = re.compile("(\d{1,2})-(\d{1,2})-(\d{4})")
 
@@ -86,7 +75,7 @@ class OngeldigFormaatException(OngeldigTypeException):
 
 
 class Config(object):
-    def __init__(self, map=None, regexp=None, sheet=None, startrow=None):
+    def __init__(self, map=None, regexp=None, sheet=None, startrow=None, colspec=None):
         if map is None:
             map = os.path.dirname(os.path.abspath(__file__))
         if regexp is None:
@@ -95,10 +84,24 @@ class Config(object):
             sheet = 1
         if startrow is None:
             startrow = 11
+        if colspec is None:
+            colspec = dict(
+                RECORDTYPE=1,
+                RECORDCODE=2,
+                VOLGNUMMER=3,
+                NAAM=4,
+                VELDTYPE=5,
+                LENGTE=6,
+                VERPLICHTING=9,
+                EINDPOSITIE=8,
+                PATROON=7,
+                BESCHRIJVING=15,
+            )
         self.map = map
         self.regexp = regexp
         self.sheet = sheet
         self.startrow = startrow
+        self.colspec = colspec
 
 
 def splits(tekst, max_lengte):
@@ -190,24 +193,25 @@ class VektisDefinitie(object):
             raise GeenSpecificatieException(self.standaard, self.versie, self.config)
         workbook = xlrd.open_workbook(bestandsnaam)
         sheet = workbook.sheet_by_index(self.config.sheet)
+        colspec = self.config.colspec
 
         for rijnr in range(self.config.startrow, sheet.nrows):
-            recordtype = cell_value(sheet.cell(rijnr, RECORDTYPE))
-            recordcode = cell_value(sheet.cell(rijnr, RECORDCODE))
+            recordtype = cell_value(sheet.cell(rijnr, colspec['RECORDTYPE']))
+            recordcode = cell_value(sheet.cell(rijnr, colspec['RECORDCODE']))
             recorddefinitie = self.recorddefinities.get(recordtype)
             if recorddefinitie is None:
                 recorddefinitie = RecordDefinitie(recordtype, recordcode)
                 self.recorddefinities[recordtype] = recorddefinitie
             recorddefinitie.velddefinities += [
                 VeldDefinitie(
-                    cell_value(sheet.cell(rijnr, VOLGNUMMER)),
-                    re.sub("\W", "_", cell_value(sheet.cell(rijnr, NAAM)).lower()),
-                    cell_value(sheet.cell(rijnr, VELDTYPE)),
-                    int(cell_value(sheet.cell(rijnr, LENGTE))),
-                    cell_value(sheet.cell(rijnr, VERPLICHTING)),
-                    cell_value(sheet.cell(rijnr, EINDPOSITIE)),
-                    cell_value(sheet.cell(rijnr, PATROON)),
-                    cell_value(sheet.cell(rijnr, BESCHRIJVING))
+                    cell_value(sheet.cell(rijnr, colspec['VOLGNUMMER'])),
+                    re.sub("\W", "_", cell_value(sheet.cell(rijnr, colspec['NAAM'])).lower()),
+                    cell_value(sheet.cell(rijnr, colspec['VELDTYPE'])),
+                    int(cell_value(sheet.cell(rijnr, colspec['LENGTE']))),
+                    cell_value(sheet.cell(rijnr, colspec['VERPLICHTING'])),
+                    cell_value(sheet.cell(rijnr, colspec['EINDPOSITIE'])),
+                    cell_value(sheet.cell(rijnr, colspec['PATROON'])),
+                    cell_value(sheet.cell(rijnr, colspec['BESCHRIJVING']))
                 )
             ]
 
