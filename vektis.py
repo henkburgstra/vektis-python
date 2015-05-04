@@ -335,7 +335,12 @@ class VeldDefinitie(object):
     def __init__(self, volgnummer, naam, veldtype, lengte, verplichting, eindpositie, patroon, beschrijving):
         self.volgnummer = volgnummer
         self.naam = naam
-        self.veldtype = veldtype
+        if veldtype == 'Numeriek':
+            self.veldtype = 'N'
+        elif veldtype == 'Alfanumeriek':
+            self.veldtype = 'AN'
+        else:
+            self.veldtype = veldtype
         self.lengte = lengte
         self.verplichting = verplichting
         self.eindpositie = eindpositie
