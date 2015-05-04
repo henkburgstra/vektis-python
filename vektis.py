@@ -171,7 +171,6 @@ class VektisDefinitie(object):
 
     def laad_specificatie(self):
         def cell_value(cell):
-            value = ''
             if cell.ctype == xlrd.XL_CELL_EMPTY:
                 value = ''
             elif cell.ctype == xlrd.XL_CELL_TEXT:
@@ -202,6 +201,11 @@ class VektisDefinitie(object):
             if recorddefinitie is None:
                 recorddefinitie = RecordDefinitie(recordtype, recordcode)
                 self.recorddefinities[recordtype] = recorddefinitie
+            if colspec['EINDPOSITIE'] >= 0:
+                endpos = cell_value(sheet.cell(rijnr, colspec['EINDPOSITIE'])),
+            else:
+                endpos = cell_value(sheet.cell(rijnr, colspec['BEGINPOSITIE'])) + cell_value(sheet.cell(rijnr, colspec['LENGTE'])) - 1
+
             recorddefinitie.velddefinities += [
                 VeldDefinitie(
                     cell_value(sheet.cell(rijnr, colspec['VOLGNUMMER'])),
@@ -209,7 +213,7 @@ class VektisDefinitie(object):
                     cell_value(sheet.cell(rijnr, colspec['VELDTYPE'])),
                     int(cell_value(sheet.cell(rijnr, colspec['LENGTE']))),
                     cell_value(sheet.cell(rijnr, colspec['VERPLICHTING'])),
-                    cell_value(sheet.cell(rijnr, colspec['EINDPOSITIE'])),
+                    endpos,
                     cell_value(sheet.cell(rijnr, colspec['PATROON'])),
                     cell_value(sheet.cell(rijnr, colspec['BESCHRIJVING']))
                 )
