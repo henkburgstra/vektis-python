@@ -5,7 +5,7 @@ mapping = dict(code_externe_integratiebericht="veld1", versienummer_berichtstand
     identificatiecode_betaling_aan="veld4", begindatum_declaratieperiode="veld5", einddatum_declaratieperiode="veld6",
     factuurnummer_declarant="veld7", dagtekening_factuur="veld8", valutacode="veld9",
     burgerservicenummer_bsn_verzekerde="veld10", uzovi_nummer="veld11", datum_geboorte_verzekerde="veld12",
-    code_geslacht_verzekerde="veld13", naamcode_naamgebruik_01="veld14", naam_verzekerde_01="veld15",
+    code_geslacht_verzekerde="veld13", naamcode_naamgebruik_01_="veld14", naam_verzekerde_01="veld15",
     voorletters_verzekerde="veld16", postcode_huisadres_verzekerde="veld17", indicatie_client_overleden="veld18",
     doorsturen_toegestaan="veld19", aanduiding_prestatiecodelijst="veld20", prestatiecode_dbc_declaratiecode="veld21",
     begindatum_prestatie="veld22", einddatum_prestatie="veld23", prestatievolgnummer="veld24",

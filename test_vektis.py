@@ -68,6 +68,8 @@ class TestVektisGenereerClasses(TestVektis):
 
 class TestReader(TestVektis):
     def setUp(self):
-        instantie = vektis.VektisDefinitie.lees_bestand("/Users/henkburgstra/Downloads/edd_bestanden_bij_ticket_7928/14129019-0101-UNIVZ-vektis9.edd")
+        instantie = vektis.VektisDefinitie.lees_bestand(
+            "/Users/henkburgstra/Downloads/vektis/test.edd",
+            vektis.Config(sheet=2, startrow=12))
         print instantie
 

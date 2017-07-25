@@ -7,8 +7,8 @@ re_eejj_mm_dd = re.compile("(\d{4})-(\d{1,2})-(\d{1,2})")
 re_dd_mm_eejj = re.compile("(\d{1,2})-(\d{1,2})-(\d{4})")
 
 standaarden = {
-    "101": "ZH308", "102": "ZH309", "179": "EP301", "180": "EP302", "189": "ZH310", "190": "ZH311",
-    "416": "WMO303", "417": "WMO304"
+    "101": "ZH308", "102": "ZH309", "179": "EP301", "180": "EP302", "187": "AW319",
+    "189": "ZH310", "190": "ZH311", "416": "WMO303", "417": "WMO304"
 }
 
 MONOLITISCH = "monolitisch"
@@ -202,14 +202,14 @@ class VektisDefinitie(object):
                 recorddefinitie = RecordDefinitie(recordtype, recordcode)
                 self.recorddefinities[recordtype] = recorddefinitie
             if colspec['EINDPOSITIE'] >= 0:
-                endpos = cell_value(sheet.cell(rijnr, colspec['EINDPOSITIE'])),
+                endpos = cell_value(sheet.cell(rijnr, colspec['EINDPOSITIE']))
             else:
                 endpos = cell_value(sheet.cell(rijnr, colspec['BEGINPOSITIE'])) + cell_value(sheet.cell(rijnr, colspec['LENGTE'])) - 1
 
             recorddefinitie.velddefinities += [
                 VeldDefinitie(
                     cell_value(sheet.cell(rijnr, colspec['VOLGNUMMER'])),
-                    re.sub("\W", "_", cell_value(sheet.cell(rijnr, colspec['NAAM'])).lower()),
+                    re.sub("_+", "_", re.sub("\W", "_", cell_value(sheet.cell(rijnr, colspec['NAAM']))).lower()),
                     cell_value(sheet.cell(rijnr, colspec['VELDTYPE'])),
                     int(cell_value(sheet.cell(rijnr, colspec['LENGTE']))),
                     cell_value(sheet.cell(rijnr, colspec['VERPLICHTING'])),
@@ -282,7 +282,7 @@ class VektisDefinitie(object):
         return "\n".join(code)
 
     @staticmethod
-    def lees_bestand(bestandsnaam, callback=None):
+    def lees_bestand(bestandsnaam, config=None, callback=None):
         def lees_standaard(header):
             code_ei = header[2:5]
             versie = int(header[5:7])
@@ -300,7 +300,7 @@ class VektisDefinitie(object):
         header = bestand.readline()
         bestand.seek(0)
         standaard, versie = lees_standaard(header)
-        definitie = VektisDefinitie(standaard, versie)
+        definitie = VektisDefinitie(standaard, versie, config=config)
         definitie.laad_specificatie()
         instantie = VektisInstantie(definitie)
 
