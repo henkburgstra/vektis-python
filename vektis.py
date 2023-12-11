@@ -3,8 +3,8 @@ import os
 import re
 import xlrd
 
-re_eejj_mm_dd = re.compile("(\d{4})-(\d{1,2})-(\d{1,2})")
-re_dd_mm_eejj = re.compile("(\d{1,2})-(\d{1,2})-(\d{4})")
+re_eejj_mm_dd = re.compile(r"(\d{4})-(\d{1,2})-(\d{1,2})")
+re_dd_mm_eejj = re.compile(r"(\d{1,2})-(\d{1,2})-(\d{4})")
 
 standaarden = {
     "101": "ZH308", "102": "ZH309", "179": "EP301", "180": "EP302", "187": "AW319",
@@ -209,7 +209,7 @@ class VektisDefinitie(object):
             recorddefinitie.velddefinities += [
                 VeldDefinitie(
                     cell_value(sheet.cell(rijnr, colspec['VOLGNUMMER'])),
-                    re.sub("_+", "_", re.sub("\W", "_", cell_value(sheet.cell(rijnr, colspec['NAAM']))).lower()),
+                    re.sub("_+", "_", re.sub(r"\W", "_", cell_value(sheet.cell(rijnr, colspec['NAAM'])).decode("utf-8")).lower()),
                     cell_value(sheet.cell(rijnr, colspec['VELDTYPE'])),
                     int(cell_value(sheet.cell(rijnr, colspec['LENGTE']))),
                     cell_value(sheet.cell(rijnr, colspec['VERPLICHTING'])),

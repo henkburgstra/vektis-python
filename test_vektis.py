@@ -45,7 +45,6 @@ class TestVektisZH308PerRecordtype(TestVektis):
         zh308_def = vektis.VektisDefinitie(options.standaard, options.versie)
         zh308_def.laad_specificatie()
 
-
         testrecord = zh308.new_testrecord()
         zh308_inst = vektis.VektisInstantie(zh308_def)
         zh308_inst.nieuw_record("VOORLOOPRECORD", data=zh308.Voorlooprecord_9_0(testrecord))
