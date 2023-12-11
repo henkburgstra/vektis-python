@@ -37,7 +37,7 @@ class TestVektisZH308Monolitisch(TestVektis):
         for _ in range(3):
             zh308_inst.nieuw_record("ZORGACTIVITEITRECORD", data=vektis.VektisData(Dummy()))
         zh308_inst.nieuw_record("SLUITRECORD")
-        print zh308_inst
+        print(zh308_inst)
 
 
 class TestVektisZH308PerRecordtype(TestVektis):
@@ -55,15 +55,15 @@ class TestVektisZH308PerRecordtype(TestVektis):
         for _ in range(3):
             zh308_inst.nieuw_record("ZORGACTIVITEITRECORD", data=vektis.VektisData(Dummy()))
         zh308_inst.nieuw_record("SLUITRECORD")
-        print zh308_inst
+        print(zh308_inst)
 
 
 class TestVektisGenereerClasses(TestVektis):
     def setUp(self):
         zh308_def = vektis.VektisDefinitie(options.standaard, options.versie)
         zh308_def.laad_specificatie()
-        print zh308_def.genereer_classes("./")
-        print zh308_def.genereer_classes("./", strategie=vektis.MONOLITISCH)
+        print(zh308_def.genereer_classes("./"))
+        print(zh308_def.genereer_classes("./", strategie=vektis.MONOLITISCH))
 
 
 class TestReader(TestVektis):
@@ -71,5 +71,5 @@ class TestReader(TestVektis):
         instantie = vektis.VektisDefinitie.lees_bestand(
             "/Users/henkburgstra/Downloads/vektis/test.edd",
             vektis.Config(sheet=2, startrow=12))
-        print instantie
+        print(instantie)
 
